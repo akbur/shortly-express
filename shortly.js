@@ -2,7 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
-
+var session = require('express-session');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -21,12 +21,25 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+app.use(session({resave: true, saveUninitialized: true, secret: 'secret', cookie: { maxAge: 60000 }}));
 
 
 app.get('/', 
 function(req, res) {
-  res.render('index');
+  util.restrict(req, res, function(){
+    res.render('index');  
+  });
 });
+
+app.get('/login',
+  function(req, res){
+    res.render('login');
+  });
+
+app.get('/signup', 
+  function(req, res){
+    res.render('signup');
+  });
 
 app.get('/create', 
 function(req, res) {
@@ -78,7 +91,15 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.post('/login', 
+  function(req, res){
 
+});
+
+app.post('/signup', 
+  function(req, res){
+    
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
