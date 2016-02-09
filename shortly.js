@@ -26,7 +26,7 @@ app.use(session({resave: true, saveUninitialized: true, secret: 'secret', cookie
 
 app.get('/', 
 function(req, res) {
-  util.restrict(req, res, function(){
+  util.checkUser(req, res, function(){
     res.render('index');  
   });
 });
@@ -43,14 +43,18 @@ app.get('/signup',
 
 app.get('/create', 
 function(req, res) {
-  res.render('index');
+  util.checkUser(req, res, function(){
+    res.render('index');
+  });
 });
 
 app.get('/links', 
 function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.send(200, links.models);
-  });
+  util.checkUser(req, res, function(){
+    Links.reset().fetch().then(function(links) {
+      res.send(200, links.models);
+    });  
+  })
 });
 
 app.post('/links', 
@@ -93,12 +97,28 @@ function(req, res) {
 
 app.post('/login', 
   function(req, res){
+    
 
 });
 
 app.post('/signup', 
   function(req, res){
-    
+    new User({username: req.body.username, password: req.body.password})
+      .save()
+      .then(function(model){
+        console.log(model);
+        new User({username: req.body.username})
+        .fetch()
+        //.then(success, fail)
+        .then(function(found){
+          if (found) {
+            console.log(found);
+          } else {
+            console.log("Error: not found.");
+          }
+        });
+      }, function(error) {console.log('error here', error);});
+
 });
 
 /************************************************************/
