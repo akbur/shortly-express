@@ -45,13 +45,15 @@ app.get('/create', util.checkUser, function(req, res) {
   res.render('index');
 });
 
-app.get('/links', util.checkUser, function(req, res) {
+app.get('/links', util.checkUser,
+function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
 });
 
-app.post('/links', util.checkUser, function(req, res) {
+app.post('/links', util.checkUser,
+function(req, res) {
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -84,6 +86,7 @@ app.post('/links', util.checkUser, function(req, res) {
   });
 });
 
+
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
@@ -102,7 +105,7 @@ app.post('/login',
       }
       var match = found.checkPassword(password, found.get('password'));
       if (match){
-        util.createSession(req, res, found)
+        util.createSession(req, res, found);
       }else{
         // Password does not match
         return res.redirect('/login');
@@ -125,7 +128,7 @@ app.post('/signup',
             'password': password
           }).save().then(function(newUser) {
             Users.add(newUser);
-            return res.redirect('/login');
+            util.createSession(req, res, newUser);
           })
         } else {
           // Username is taken
