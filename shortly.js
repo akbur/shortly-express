@@ -21,44 +21,37 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
-app.use(session({resave: true, saveUninitialized: true, secret: 'secret', cookie: { maxAge: 60000 }}));
+app.use(session({resave: false, saveUninitialized: true, secret: 'secret'}));
 
 
-app.get('/', 
-function(req, res) {
-  util.checkUser(req, res, function(){
-    res.render('index');  
+app.get('/', util.checkUser, function(req, res) {
+  res.render('index');  
+});
+
+app.get('/login', function(req, res){
+  res.render('login');
+});
+
+app.get('/logout', function(req, res){
+  req.session.destroy();
+  res.redirect('/login');
+})
+
+app.get('/signup', function(req, res){
+  res.render('signup');
+});
+
+app.get('/create', util.checkUser, function(req, res) {
+  res.render('index');
+});
+
+app.get('/links', util.checkUser, function(req, res) {
+  Links.reset().fetch().then(function(links) {
+    res.send(200, links.models);
   });
 });
 
-app.get('/login',
-  function(req, res){
-    res.render('login');
-  });
-
-app.get('/signup', 
-  function(req, res){
-    res.render('signup');
-  });
-
-app.get('/create', 
-function(req, res) {
-  util.checkUser(req, res, function(){
-    res.render('index');
-  });
-});
-
-app.get('/links', 
-function(req, res) {
-  util.checkUser(req, res, function(){
-    Links.reset().fetch().then(function(links) {
-      res.send(200, links.models);
-    });  
-  })
-});
-
-app.post('/links', 
-function(req, res) {
+app.post('/links', util.checkUser, function(req, res) {
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -97,29 +90,50 @@ function(req, res) {
 
 app.post('/login', 
   function(req, res){
-    
+    var username = req.body.username;
+    var password = req.body.password;
+
+    new User({username: username})
+    .fetch()
+    .then(function(found){
+      if (!found){
+        // Username does not exist
+        return res.redirect('/login');
+      }
+      var match = found.checkPassword(password, found.get('password'));
+      if (match){
+        util.createSession(req, res, found)
+      }else{
+        // Password does not match
+        return res.redirect('/login');
+      }
+    })
 
 });
 
 app.post('/signup', 
   function(req, res){
-    new User({username: req.body.username, password: req.body.password})
-      .save()
-      .then(function(model){
-        console.log(model);
-        new User({username: req.body.username})
-        .fetch()
-        //.then(success, fail)
-        .then(function(found){
-          if (found) {
-            console.log(found);
-          } else {
-            console.log("Error: not found.");
-          }
-        });
-      }, function(error) {console.log('error here', error);});
+    var username = req.body.username;
+    var password = req.body.password;
 
+    new User({username: username})
+      .fetch()
+      .then(function(found){
+        if (!found){
+          new User({
+            'username': username,
+            'password': password
+          }).save().then(function(newUser) {
+            Users.add(newUser);
+            return res.redirect('/login');
+          })
+        } else {
+          // Username is taken
+          return res.redirect('/signup');
+        }
+      });
 });
+
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
