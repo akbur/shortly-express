@@ -1,6 +1,5 @@
 var Bookshelf = require('bookshelf');
 var path = require('path');
-
 var db = Bookshelf.initialize({
   client: 'sqlite3',
   connection: {
@@ -13,7 +12,7 @@ var db = Bookshelf.initialize({
   }
 });
 
-db.knex.schema.hasTable('urls').then(function(exists) {
+db.knex.schema.hasTable('urls').then(function (exists) {
   if (!exists) {
     db.knex.schema.createTable('urls', function (link) {
       link.increments('id').primary();
@@ -29,7 +28,7 @@ db.knex.schema.hasTable('urls').then(function(exists) {
   }
 });
 
-db.knex.schema.hasTable('clicks').then(function(exists) {
+db.knex.schema.hasTable('clicks').then(function (exists) {
   if (!exists) {
     db.knex.schema.createTable('clicks', function (click) {
       click.increments('id').primary();
@@ -41,21 +40,16 @@ db.knex.schema.hasTable('clicks').then(function(exists) {
   }
 });
 
-/************************************************************/
-// Add additional schema definitions below
-/************************************************************/
-
-db.knex.schema.hasTable('users').then(function(exists){
-  if (!exists){
-    db.knex.schema.createTable('users', function(user){
+db.knex.schema.hasTable('users').then(function (exists) {
+  if (!exists) {
+    db.knex.schema.createTable('users', function (user) {
       user.increments('id').primary();
       user.string('username', 30);//.unique()
       user.string('password', 30);
-    }).then(function (table){
+    }).then(function (table) {
       console.log('Created Table', table);
-    })
+    });
   }
 });
-
 
 module.exports = db;
